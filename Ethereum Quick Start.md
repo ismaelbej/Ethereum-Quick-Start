@@ -1,6 +1,6 @@
 # Ethereum Quick Start
 
-This document will describe how to create an Ethereum private test network,
+This document describe how to create an Ethereum private test network,
 deploy a contract, and interact with it.
 
 Ethereum has a public main network, and a public test network. But we will
@@ -20,18 +20,17 @@ sudo apt-get install ethereum
 sudo apt-get install solc
 ```
 
-The ethereum package will install geth which is one of the Official
-Ethereum nodes (it is programmed in Go). The package solc is the compiler
-for Solidity, one of the programming language for Ethereum's contracts.
+The ethereum package will install `geth` which is one of the Ethereum Official nodes.
+The package `solc` is the compiler for _Solidity_, a programming language for Ethereum's contracts.
 
 ## Running a private testnet
 
-Create a file genesis.json with the following content, this are the
-parameters for our private testnet.
+We create a file `genesis.json` with this content (this are the
+parameters for our private testnet):
 
 ```json
 {
-  "nonce": "0xdeadbeefdeadbeef",
+  "nonce": "0x0000000000000000",
   "timestamp": "0x00",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "extraData": "0x00",
@@ -44,38 +43,39 @@ parameters for our private testnet.
 }
 ```
 
-We can initialize the private testnet, this command will create the _node1_
-directory with the ethereum blockchain info within.
+To initialize the private test network we should execute this command.
 
-**This command should be run only once**.
+**Note:** This command should be run only once.
 
 ```sh
 > geth --datadir node1 init genesis.jon
 ```
 
-Now to run the server we use the following command
+This command creates the _node1_ directory an initialize the blockchain.
+
+To run the server we execute this command:
 
 ```sh
 > geth --networkid 6000 --datadir node1 --rpc --rpcapi eth,web3,net,personal,ssh,db --nodiscover console
 ```
 
-This will leave us in command line environment, this is a limited
-javascript prompt (has a simple autocomplete).
+This command will leave us in a command line environment. In this is prompt
+we can type javascript to send commands to the node.
 
-For example the following command
+For example the command
 
 ```js
 > web3.version
 ```
 
-Should output something like this
+Will output information about our node
 
-```js
+```txt
 {
-  api: "0.15.3",
+  api: "0.18.1",
   ethereum: "0x3f",
   network: "6000",
-  node: "Geth/v1.4.5-stable/linux/go1.6.1",
+  node: "Geth//v1.5.9-stable//linux//go1.7.4",
   whisper: undefined,
   getEthereum: function(callback),
   getNetwork: function(callback),
@@ -84,24 +84,25 @@ Should output something like this
 }
 ```
 
-We can exit from the geth console typing Ctrl+D.
+We can exit from the geth console typing `exit` and pressing `Enter`.
 
 ## Creating an account
 
-The first thing we need to do is create a new account. From the geth console
-(replacing "abcd123" with our own password).
+To create a new account. From the geth console we type:
 
 ```js
 > personal.newAccount("abcd123")
 ```
 
-Now `eth.accounts[0]` should contain the account recently created
+Note: We should replace "abcd123" with our own password.
+
+Now `eth.accounts[0]` contain the account recently created
 
 ```js
 > eth.accounts[0]
 ```
 
-To use this account we need to unlock it.
+To use this account to send transactions we need to unlock it.
 
 ```js
 > personal.unlockAccount(eth.accounts[0], "abcd123", 10000)
@@ -109,10 +110,10 @@ To use this account we need to unlock it.
 
 The first parameter is the account to unlock, the second parameter is
 the account's password, and the third parameter is the time to unlock the
-account for (in seconds).
+account (in seconds).
 
-We need to do this for every operation that will modify our balance.
-For example send a transaction.
+We need to do this for operations that can modify our balance.
+For example to send a transaction.
 
 We can check our balance (which should be zero).
 
@@ -121,22 +122,23 @@ We can check our balance (which should be zero).
 ```
 
 To deploy a contract, or any transaction we need to have some ether,
-in the testnet we can mine some blocks.
+in out test network we can mine some blocks.
 
 ```js
 > miner.start(1); admin.sleepBlocks(2); miner.stop()
 ```
 
-This will create one miner thread, and will wait to have mined at least
+This will create a single miner thread, and will wait to have mined at least
 two blocks.
 
-The **first time** that mining is started it will create the DAG,
-which may take **several minutes**.
+**Note:** Only the _first time_ that mining is started it will create the DAG,
+which may take _several minutes_ to complete.
 
-The DAG is a dataset used by the Ethereum proof of work to secure
-its blockchain.
+The DAG is a dataset used by the Ethereum to secure its blockchain.
 
-We can now display our balance in ethers
+We can now display our balance. The balance is reported in _Wei_. But
+a more convenient unit is _Ether_, to convert from _Wei_ to _Ether_ we
+use the function `fromWei`.
 
 ```js
 > web3.fromWei(eth.getBalance(eth.accounts[0]), "ether")
@@ -144,7 +146,7 @@ We can now display our balance in ethers
 
 ## Deploying a contract
 
-We will use the following contract
+This is our contract
 
 ```txt
 contract hello {
@@ -167,7 +169,7 @@ contract hello {
 }
 ```
 
-Store the contract in a variable
+We store the contract as a string in a variable
 
 ```js
 > source = 'contract hello { address owner; string greeting; function hello() { owner = msg.sender; } function kill() { if (msg.sender == owner) { suicide(owner); } } function setSalute(string _greeting) public { greeting = _greeting; } function greet() constant returns (string) { return greeting; } }'
@@ -183,14 +185,16 @@ We can deploy the contract in our private the blockchain
 
 ```js
 > helloContract = eth.contract(compiled['<stdin>:hello'].info.abiDefinition)
-> hello = helloContract.new({from:eth.accounts[0], data:compiled.hello.code, gas:3000000})
+> hello = helloContract.new({from:eth.accounts[0], data:compiled['<stdin>:hello'].code, gas:3000000})
 ```
 
 The transaction for our contract was created, but will not be available
 until it is mined in the blockchain. The resulting object `hello` contains
 a field `transactionHash`, that can be used to check if the transaction
-was mined. Also the field `address` from `hello` should be undefined until
+was mined. The field `address` from the `hello` object should is undefined until
 the contract is mined.
+
+We get information about the transaction with `getTransactionReceipt`
 
 ```js
 > eth.getTransactionReceipt(hello.transactionHash)
@@ -207,11 +211,13 @@ Now `eth.getTransactionReceipt` should return a non null object, and the
 
 ## Interacting with the contract
 
-An Ethereum's contracts has two type of methods: constant methods, and
-non-constant methods. The constant methods those that do not change
-the contract's storage, their execution costs nothing, and the non-constant
-methods are those that can modify the contract storage and they require
-to pay for their execution.
+An Ethereum's contracts has two type of methods:
+
+1.  The _constant methods_ those that do not change
+    the contract's storage, their execution costs nothing
+2.  The _non-constant_ methods are those that can modify
+    the contract storage and they require
+    to pay for their execution.
 
 In our `hello` example `setSalute` is non-constant and `greet` is constant.
 
@@ -221,14 +227,11 @@ We use `sendTransaction` to execute a non-constant methods.
 > hello.setSalute.sendTransaction('Hi ', {from:eth.accounts[0], gas:1000000})
 ```
 
-This will return a transaction hash, and the method will not be executed
-until it is mined. Again we mine a block with
+This returns a transaction hash. Again we mine a block to process the transaction
 
 ```js
 > miner.start(1); admin.sleepBlocks(2); miner.stop()
 ```
-
-from the console.
 
 Calling `getTransactionReceipt` with our transactionHash should be non-null.
 
