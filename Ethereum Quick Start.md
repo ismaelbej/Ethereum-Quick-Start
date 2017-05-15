@@ -30,18 +30,19 @@ parameters for our private testnet):
 
 ```json
 {
-  "nonce": "0x0000000000000000",
-  "timestamp": "0x00",
-  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "extraData": "0x00",
-  "gasLimit": "0x80000000",
-  "difficulty": "0x00",
-  "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "coinbase": "0x3333333333333333333333333333333333333333",
+  "config": {
+    "chainId": 6000,
+    "homesteadBlock": 0,
+    "eip155Block": 0,
+    "eip158Block": 0
+  },
+  "gasLimit": "0x8000000",
+  "difficulty": "0x0400",
   "alloc": {
   }
 }
 ```
+**Note:** Since geth 1.6 it is required to include a `config` field for private testnets.
 
 To initialize the private test network we should execute this command.
 
@@ -56,7 +57,7 @@ This command creates the _node1_ directory an initialize the blockchain.
 To run the server we execute this command:
 
 ```sh
-> geth --networkid 6000 --datadir node1 --rpc --rpcapi eth,web3,net,personal,ssh,db --nodiscover console
+> geth --datadir node1 --rpc --rpcapi eth,web3,net,personal,ssh,db,debug --nodiscover --maxpeers 0 console
 ```
 
 This command will leave us in a command line environment. In this is prompt
@@ -75,7 +76,7 @@ Will output information about our node
   api: "0.18.1",
   ethereum: "0x3f",
   network: "6000",
-  node: "Geth//v1.5.9-stable//linux//go1.7.4",
+  node: "Geth//v1.6.1-stable//linux//go1.8.1",
   whisper: undefined,
   getEthereum: function(callback),
   getNetwork: function(callback),
